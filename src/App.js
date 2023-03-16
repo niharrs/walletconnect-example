@@ -10,6 +10,8 @@ const web3modal = new Web3Modal({
 
 function App() {
   const [signClient, setSignClient] = useState();
+  const [sessions, setSessions] = useState([]);
+  const [accounts, setAccounts] = useState([]);
 
   async function createClient() {
     try {
@@ -33,17 +35,28 @@ function App() {
         },
       };
 
-      const { uri } = await signClient.connect({
+      const { uri, approval } = await signClient.connect({
         requiredNamespaces: proposalNamespace,
       });
 
       if (uri) {
-        web3modal.openModal({
-          uri,
-        });
+        web3modal.openModal({ uri });
+        const sessionNamespace = await approval();
+        onSessionConnect(sessionNamespace);
+        web3modal.closeModal();
       }
     } catch (err) {
       console.log(err);
+    }
+  }
+
+  async function onSessionConnect(session) {
+    if (!session) throw Error("Session doesn't exist");
+    try {
+      setSessions(session);
+      setAccounts(session.namespaces.eip155.accounts[0].slice(9));
+    } catch (e) {
+      console.log(e);
     }
   }
 
@@ -56,9 +69,13 @@ function App() {
   return (
     <div className="App">
       <h1>Debugging paymaster</h1>
-      <button onClick={handleConnect} disabled={!signClient}>
-        Connect
-      </button>
+      {accounts.length ? (
+        <p>{accounts}</p>
+      ) : (
+        <button onClick={handleConnect} disabled={!signClient}>
+          Connect
+        </button>
+      )}
     </div>
   );
 }
