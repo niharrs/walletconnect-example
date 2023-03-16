@@ -60,6 +60,24 @@ function App() {
     }
   }
 
+  async function handleDisconnect() {
+    try {
+      await signClient.disconnect({
+        topic: sessions.topic,
+        code: 6000,
+        message: "User disconnected",
+      });
+      reset();
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  const reset = () => {
+    setAccounts([]);
+    setSessions([]);
+  };
+
   useEffect(() => {
     if (!signClient) {
       createClient();
@@ -70,7 +88,10 @@ function App() {
     <div className="App">
       <h1>Debugging paymaster</h1>
       {accounts.length ? (
-        <p>{accounts}</p>
+        <>
+          <p>{accounts}</p>
+          <button onClick={handleDisconnect}> Disconnect </button>
+        </>
       ) : (
         <button onClick={handleConnect} disabled={!signClient}>
           Connect
